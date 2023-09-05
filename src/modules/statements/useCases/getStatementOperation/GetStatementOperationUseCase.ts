@@ -1,12 +1,12 @@
-import { inject, injectable } from "tsyringe";
+import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from "../../../users/repositories/IUsersRepository";
-import { IStatementsRepository } from "../../repositories/IStatementsRepository";
-import { GetStatementOperationError } from "./GetStatementOperationError";
+import { IUsersRepository } from '../../../users/repositories/IUsersRepository'
+import { IStatementsRepository } from '../../repositories/IStatementsRepository'
+import * as GetStatementOperationError from './GetStatementOperationError'
 
 interface IRequest {
-  user_id: string;
-  statement_id: string;
+  userId: string
+  statementId: string
 }
 
 @injectable()
@@ -19,20 +19,23 @@ export class GetStatementOperationUseCase {
     private statementsRepository: IStatementsRepository
   ) {}
 
-  async execute({ user_id, statement_id }: IRequest) {
-    const user = await this.usersRepository.findById(user_id);
+  async execute({ userId, statementId }: IRequest) {
+    const user = await this.usersRepository.findById(userId)
 
-    if(!user) {
-      throw new GetStatementOperationError.UserNotFound();
+    if (!user) {
+      throw new GetStatementOperationError.UserNotFound()
     }
 
-    const statementOperation = await this.statementsRepository
-      .findStatementOperation({ user_id, statement_id });
+    const statementOperation =
+      await this.statementsRepository.findStatementOperation({
+        userId,
+        statementId
+      })
 
-      if(!statementOperation) {
-        throw new GetStatementOperationError.StatementNotFound();
-      }
+    if (!statementOperation) {
+      throw new GetStatementOperationError.StatementNotFound()
+    }
 
-      return statementOperation;
+    return statementOperation
   }
 }

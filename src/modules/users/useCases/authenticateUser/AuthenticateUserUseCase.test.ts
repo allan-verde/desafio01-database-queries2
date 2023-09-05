@@ -1,33 +1,37 @@
-import { AppError } from '../../../../shared/errors/AppError'
 import { InMemoryUsersRepository } from '../../repositories/in-memory/InMemoryUsersRepository'
 import { IUsersRepository } from '../../repositories/IUsersRepository'
 import { CreateUserUseCase } from '../createUser/CreateUserUseCase'
 import { AuthenticateUserUseCase } from './AuthenticateUserUseCase'
 
+import { IncorrectEmailOrPasswordError } from './IncorrectEmailOrPasswordError'
+
 let authenticateUserUseCase: AuthenticateUserUseCase
 let authenticateUserInMemoryRepository: IUsersRepository
 let createUsersUseCase: CreateUserUseCase
 
-const user_data = {
+const userData = {
   name: 'Test',
   email: 'test@mail.com',
   password: 'test'
 }
 
 describe('Authenticate User', () => {
-
   beforeEach(() => {
     authenticateUserInMemoryRepository = new InMemoryUsersRepository()
-    authenticateUserUseCase = new AuthenticateUserUseCase(authenticateUserInMemoryRepository)
-    createUsersUseCase = new CreateUserUseCase(authenticateUserInMemoryRepository)
+    authenticateUserUseCase = new AuthenticateUserUseCase(
+      authenticateUserInMemoryRepository
+    )
+    createUsersUseCase = new CreateUserUseCase(
+      authenticateUserInMemoryRepository
+    )
   })
 
   it('should be able to authenticate a user', async () => {
-    await createUsersUseCase.execute(user_data)
+    await createUsersUseCase.execute(userData)
 
     const user = await authenticateUserUseCase.execute({
-      email: user_data.email,
-      password: user_data.password,
+      email: userData.email,
+      password: userData.password
     })
 
     expect(user).toHaveProperty('token')
@@ -35,23 +39,23 @@ describe('Authenticate User', () => {
 
   it('should not be able to authenticate a non-existent user', async () => {
     expect(async () => {
-      await createUsersUseCase.execute(user_data)
+      await createUsersUseCase.execute(userData)
 
       await authenticateUserUseCase.execute({
         email: 'error@mail.com',
-        password: user_data.password,
+        password: userData.password
       })
-    }).rejects.toBeInstanceOf(AppError)
+    }).rejects.toEqual(new IncorrectEmailOrPasswordError())
   })
 
   it('should not be able to authenticate a user with wrong password', async () => {
     expect(async () => {
-      await createUsersUseCase.execute(user_data)
+      await createUsersUseCase.execute(userData)
 
       await authenticateUserUseCase.execute({
-        email: user_data.email,
-        password: 'wrong_password',
+        email: userData.email,
+        password: 'wrong_password'
       })
-    }).rejects.toBeInstanceOf(AppError)
+    }).rejects.toEqual(new IncorrectEmailOrPasswordError())
   })
 })

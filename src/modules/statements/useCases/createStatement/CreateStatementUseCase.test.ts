@@ -1,9 +1,13 @@
+import { CreateStatementUseCase } from './CreateStatementUseCase'
+
+import { OperationType } from '../../entities/Statement'
+
 import { IStatementsRepository } from '../../../statements/repositories/IStatementsRepository'
 import { InMemoryStatementsRepository } from '../../../statements/repositories/in-memory/InMemoryStatementsRepository'
-import { CreateStatementUseCase } from './CreateStatementUseCase'
 import { InMemoryUsersRepository } from '../../../users/repositories/in-memory/InMemoryUsersRepository'
 import { IUsersRepository } from '../../../users/repositories/IUsersRepository'
-import { AppError } from '../../../../shared/errors/AppError'
+
+import { InsufficientFunds, UserNotFound } from './CreateStatementError'
 
 let statementsRepository: IStatementsRepository
 let inMemoryUsersRepository: IUsersRepository
@@ -13,7 +17,10 @@ describe('Create Statement Use Case', () => {
   beforeEach(() => {
     statementsRepository = new InMemoryStatementsRepository()
     inMemoryUsersRepository = new InMemoryUsersRepository()
-    createStatementUseCase = new CreateStatementUseCase(inMemoryUsersRepository, statementsRepository)
+    createStatementUseCase = new CreateStatementUseCase(
+      inMemoryUsersRepository,
+      statementsRepository
+    )
   })
 
   it('should be able to create a new statement', async () => {
@@ -26,12 +33,12 @@ describe('Create Statement Use Case', () => {
     const statement = await createStatementUseCase.execute({
       amount: 100,
       description: '',
-      type: 'deposit' as any,
-      user_id: user.id as string
+      type: 'deposit' as OperationType,
+      userId: user.id as string
     })
 
     expect(statement).toHaveProperty('id')
-    expect(statement.user_id).toEqual(user.id)
+    expect(statement.userId).toEqual(user.id)
   })
 
   it('should not be able to create a new statement if user does not exists', async () => {
@@ -39,11 +46,10 @@ describe('Create Statement Use Case', () => {
       await createStatementUseCase.execute({
         amount: 100,
         description: '',
-        type: 'deposit' as any,
-        user_id: 'non-existing-user'
+        type: 'deposit' as OperationType,
+        userId: 'non-existing-user'
       })
-    }
-    ).rejects.toBeInstanceOf(AppError)
+    }).rejects.toEqual(new UserNotFound())
   })
 
   it('should not be able to create a new statement if user does not have enough funds', async () => {
@@ -57,10 +63,9 @@ describe('Create Statement Use Case', () => {
       await createStatementUseCase.execute({
         amount: 100,
         description: '',
-        type: 'withdraw' as any,
-        user_id: user.id as string
+        type: 'withdraw' as OperationType,
+        userId: user.id as string
       })
-
-    }).rejects.toBeInstanceOf(AppError)
+    }).rejects.toEqual(new InsufficientFunds())
   })
 })

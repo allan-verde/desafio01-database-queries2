@@ -1,20 +1,21 @@
 import { CreateUserUseCase } from '../createUser/CreateUserUseCase'
-import { InMemoryUsersRepository } from '../../repositories/in-memory/InMemoryUsersRepository'
 import { ShowUserProfileUseCase } from './ShowUserProfileUseCase'
-import { AppError } from '../../../../shared/errors/AppError'
+
+import { InMemoryUsersRepository } from '../../repositories/in-memory/InMemoryUsersRepository'
+
+import { ShowUserProfileError } from './ShowUserProfileError'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
 let createUserUseCase: CreateUserUseCase
 let showUserProfileUseCase: ShowUserProfileUseCase
 
-const user_data = {
+const userData = {
   name: 'User Test',
   email: 'use@test.com',
   password: '1234'
 }
 
 describe('Show User Profile Use Case', () => {
-
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
     createUserUseCase = new CreateUserUseCase(inMemoryUsersRepository)
@@ -22,7 +23,7 @@ describe('Show User Profile Use Case', () => {
   })
 
   it('should be able to show user profile', async () => {
-    const user = await createUserUseCase.execute(user_data)
+    const user = await createUserUseCase.execute(userData)
 
     const userProfile = await showUserProfileUseCase.execute(user.id as string)
 
@@ -33,6 +34,6 @@ describe('Show User Profile Use Case', () => {
   it('should not be able to show user profile if user does not exists', async () => {
     expect(async () => {
       await showUserProfileUseCase.execute('invalid_id')
-    }).rejects.toBeInstanceOf(AppError)
+    }).rejects.toEqual(new ShowUserProfileError())
   })
 })

@@ -1,11 +1,11 @@
-import request from 'supertest';
-import { app } from '../../../../app';
+import request from 'supertest'
 import { Connection } from 'typeorm'
-import createConnection from '../../../../database';
+import createConnection from '../../../../database'
+import { app } from '../../../../shared/infra/http/app'
 
 let connection: Connection
 
-const user_test = {
+const userTest = {
   name: 'User Example',
   email: 'user@mail.com',
   password: '1234'
@@ -13,43 +13,43 @@ const user_test = {
 
 describe('CreateUserController', () => {
   beforeAll(async () => {
-    connection = await createConnection();
-    await connection.runMigrations();
+    connection = await createConnection()
+    await connection.runMigrations()
 
-    await request(app).post('/api/v1/users').send(user_test);
-  });
+    await request(app).post('/api/v1/users').send(userTest)
+  })
 
   afterAll(async () => {
-    await connection.dropDatabase();
-    await connection.close();
-  });
+    await connection.dropDatabase()
+    await connection.close()
+  })
 
-  it("should be able to authenticate an user", async () => {
+  it('should be able to authenticate an user', async () => {
     const response = await request(app).post('/api/v1/sessions').send({
-      email: user_test.email,
-      password: user_test.password
-    });
+      email: userTest.email,
+      password: userTest.password
+    })
 
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('token');
-    expect(response.body.user.email).toEqual(user_test.email);
-  });
+    expect(response.status).toBe(200)
+    expect(response.body).toHaveProperty('token')
+    expect(response.body.user.email).toEqual(userTest.email)
+  })
 
-  it("should not be able to authenticate an nonexistent user", async () => {
+  it('should not be able to authenticate an nonexistent user', async () => {
     const response = await request(app).post('/api/v1/sessions').send({
       email: '',
-      password: user_test.password
-    });
+      password: userTest.password
+    })
 
-    expect(response.status).toBe(401);
-  });
+    expect(response.status).toBe(401)
+  })
 
-  it("should not be able to authenticate an user with incorrect password", async () => {
+  it('should not be able to authenticate an user with incorrect password', async () => {
     const response = await request(app).post('/api/v1/sessions').send({
-      email: user_test.email,
+      email: userTest.email,
       password: '1111'
-    });
+    })
 
-    expect(response.status).toBe(401);
-  });
-});
+    expect(response.status).toBe(401)
+  })
+})
